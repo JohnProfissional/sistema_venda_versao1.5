@@ -1,0 +1,528 @@
+CREATE TABLE categoria
+(
+    idcategoria serial primary key,
+    nome_categoria varchar(100)
+);
+
+CREATE TABLE cliente
+(
+    idcliente serial primary key,
+    nomecliente varchar(100),
+    cpfcliente varchar(100), 
+    rgcliente varchar(100), 
+    sexocliente varchar(100), 
+    datanascimento date,
+    debito numeric(7,2),
+);
+
+CREATE TABLE contato_cliente
+(
+    idcontatocliente serial primary,
+    idcliente int,
+    telefone varchar(100),
+    email varchar(100),
+    whatsapp varchar(100),
+    foreign key (idcliente) references cliente (idcliente)
+);
+
+CREATE TABLE contato_fornecedor
+(
+    idcontatofornecedor serial primary key,
+    idfornecedor int,
+    telefone_fornecedor varchar(100),
+    whatsappfornecedor varchar(100),
+    email_fornecedor varchar(100),
+	foreign key(idfornecedor) references fornecedor(idfornecedor) 
+);
+
+CREATE TABLE devolucao
+(
+    iddevolucao serial,
+    quantidade_devolvida numeric(7,2),
+    datadevolucao date,
+    descricaodadevolucao varchar(100),
+    iditensvendas int,
+    foreign key (iditensvenda) references itens_vendas(iditensvenda)
+);
+
+
+CREATE TABLE endereco_cliente
+(
+    idendereco_cliente serial primary key,)
+    idcliente int,
+    cidade varchar(100),
+    estado varchar(100),
+    bairro varchar(100),
+    rua varchar(100),
+    numero int,
+    cep varchar(100),
+    foreign key (idcliente) references cliente (idcliente)
+);
+
+CREATE TABLE entrada
+(
+    identrada serial primary key,
+    idfornecedor int,
+    valortotaldanota numeric(7,2),
+    dataentrada date,
+    idusuario int,
+    foreign key (idfornecedor) references fornecedor(idfornecedor)
+);
+
+CREATE TABLE forma_de_pagamento(
+    idforma_de_pagamento serial primary key,
+    tipo_pagamento varchar(100),
+    idvenda int,
+    foreign key (idvenda) references venda(idvenda)
+);
+
+CREATE TABLE fornecedor
+(
+    idfornecedor integer primary key,
+    razaosocial varchar(100),
+    nomefantasia varchar(100),
+    cnpj varchar(100),
+);
+
+CREATE TABLE itens_vendas
+(
+    iditensvendas serial primary key,
+    idvenda int,
+    idproduto int,
+    quantidade_itens numeric(7,2),
+    valor double,
+    desconto numeric(7,2),
+   foreign key (idvenda) references venda(idvenda),
+   foreign key (idproduto) references produto(idproduto)
+);
+
+CREATE TABLE itensdevolucao
+(
+    iditensdevolucao serial primary key,
+    iddevolucao int,
+    idproduto int,
+    quantidade_devolvida int,
+    datadevolvida date,
+    foreign key (iddevolucao) references devolucao (iddevolucao)
+);
+
+CREATE TABLE itensentrada
+(
+    iditensentrada serial,
+    identrada int,
+    idproduto int,
+    precocompra numeric(7,2),
+    quantidade numeric(7,2),
+    unidade varchar(2),
+    ipi numeric(7,2),
+    frete numeric(7,2),
+    icms numeric(7,2),
+    foreign key(identrada) references entrada(identrada),
+    foreign key(idproduto) references produto(idproduto)
+);
+
+
+CREATE TABLE marca
+(
+    idmarca serial primary key,
+    nomemarca varchar(100)
+);
+
+CREATE TABLE niveis_acessos
+(
+    idnivelacesso serial primary key,
+    nome varchar(100),
+    created date
+);
+
+CREATE TABLE pagamento
+(
+    idpagamento serial primary key,
+    valor_pagamento numeric(7,2),
+    data_pagamento date,
+    numerosdeparcelas int,
+);
+
+CREATE TABLE parcelas
+(
+    idparcelas serial primary key,
+    idforma_de_pagamento int,
+    numerodeparcelas int,
+    valorparcela numeric(7,2),
+    status varchar(20),
+    vencimento date,
+    valortotalparcela double,
+    idpagamento int,
+	foreign key(idforma_de_pagamento) references forma_de_pagamento(idforma_de_pagamento),
+	foreign key(idpagamento) references pagamento(idpagamento)
+);
+
+CREATE TABLE prateleira
+(
+    idprateleira serial primary key,
+    idcategoria int,
+    descricaoprateleira varchar(100),
+    quantidadefrascos int,
+   foreign key(idcategoria) references categoria(idcategoria)
+);
+
+CREATE TABLE produto
+(
+    idproduto serial primary key,
+    nomedoproduto varchar(100),
+    idmarca int,
+    idcategoria int,
+    icms numeric(7,2),
+    ipi numeric(7,2),
+    frete numeric(7,2),
+    valornafabrica numeric(7,2),
+    valordecompra numeric(7,2),
+    lucro numeric(7,2),
+    valorvenda numeric(7,2),
+    desconto numeric(7,2),
+    quantidade numeric(7,2),
+    datavencimento date,
+   foreign key(idmarca) references marca(idmarca),
+	foreign key(idcategoria) references categoria(idcategoria)
+);
+
+CREATE TABLE usuario
+(
+    idusuario serial primary key,
+    usuario varchar(100),
+    senha varchar(100),
+    idnivelacesso int,
+    email varchar(100),
+    foreign key(idnivelacesso) references niveis_acessos(idnivelacesso)
+);
+
+CREATE TABLE venda
+(
+    idvenda serial primary key,
+    idusuario int,
+    idcliente int,
+    datavenda date,
+    descontototal numeric(7,2),
+    descontoacerto numeric(7,2),
+    valortotal numeric(7,2),
+	foreign key(idusuario) references usuario(idusuario),
+	foreign key(idcliente) references cliente(idcliente)
+);
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ SELECT cliente.nomecliente, venda.datavenda,venda.valortotal,
+itens_vendas.quantidade_itens,forma_de_pagamento.tipo_pagamento,
+parcelas.numerodeparcelas,parcelas.valorparcela,parcelas.status 
+FROM cliente,venda,itens_vendas,forma_de_pagamento,parcelas
+ORDER by cliente.nomecliente, venda.datavenda,venda.valortotal,
+itens_vendas.quantidade_itens,forma_de_pagamento.tipo_pagamento,
+parcelas.numerodeparcelas,parcelas.valorparcela,parcelas.status  DESC LIMIT 1
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE FUNCTION insert_update_delete_itensentrada_produto()
+	 RETURNS trigger AS $insert_update_delete_itensentrada_produto$
+DECLARE
+BEGIN
+-- o nome dessa trigger esta insert_delete_itensentrada porque são trigger faz as operações insert or update or delete depende da condição operação realizada pelo usuario
+
+	IF (TG_OP = 'INSERT') THEN
+		if((new.quantidade_itens>0) and (new.desconto>0)) then
+			UPDATE produto SET quantidade =quantidade - new.quantidade_itens,
+					--valortotal de venda--   --menor-- --o valor da porcentagem--
+			lucro=lucro+((new.valor * new.quantidade_itens)-((new.valor * new.quantidade_itens)*(new.desconto/100)))-
+					--desconto acerto--
+		(((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)) - 
+		trunc((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)))-
+									--valor de compra - quantidade de itens da itens_venda--
+									(valordecompra * new.quantidade_itens)
+			where idproduto = new.idproduto;
+		end if;
+		
+	-- Aqui temos um bloco IF que confirmará o tipo de operação UPDATE.
+	ELSIF (TG_OP = 'UPDATE') THEN
+		if((new.quantidade_itens>0) and (new.desconto>0)) then
+			UPDATE produto SET quantidade =quantidade - new.quantidade_itens,
+					--valortotal de venda--   --menor-- --o valor da porcentagem--
+			lucro=lucro-(((new.valor * new.quantidade_itens)-((new.valor * new.quantidade_itens)*(new.desconto/100)))-
+					--desconto acerto--
+		(((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)) - 
+		trunc((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)))-
+									--valor de compra - quantidade de itens da itens_venda--
+									(valordecompra * new.quantidade_itens))
+			where idproduto = new.idproduto;
+		end if;
+		
+												
+		RETURN old;
+	-- Aqui temos um bloco IF que confirmará o tipo de operação DELETE
+	ELSIF (TG_OP = 'DELETE') THEN
+			UPDATE produto set quantidade=quantidade + new.quantidade_itens,
+				lucro=lucro-((new.valor * new.quantidade_itens)-((new.valor * new.quantidade_itens)*(new.desconto/100)))-
+					--desconto acerto--
+		(((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)) - 
+		trunc((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)))-
+									--valor de compra - quantidade de itens da itens_venda--
+									(valordecompra * new.quantidade_itens)
+			 where idproduto=new.idproduto;
+		RETURN old;
+	END IF;
+RETURN NULL;
+END;
+$insert_update_delete_itensentrada_produto$ language plpgsql;
+
+CREATE TRIGGER insert_update_delete_itensentrada_produto
+AFTER INSERT ON itensentrada
+FOR EACH ROW 
+EXECUTE PROCEDURE insert_update_delete_itensentrada_produto();
+--------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+o nome dessa trigger esta insert_delete_itensentrada porque são trigger faz as operações insert or update or delete depende da condição operação realizada pelo usuario
+
+CREATE FUNCTION insert_update_delete_itensentrada_entrada()
+ RETURNS trigger AS $insert_update_delete_itensentrada_entrada$
+DECLARE
+
+BEGIN
+-- Aqui temos um bloco IF que confirmará o tipo de operação.
+	IF (TG_OP = 'INSERT') THEN
+		if((new.quantidade>0) and (new.icms>0) and (new.ipi>0) and (new.frete>0) and (new.precocompra>0)) then
+			UPDATE entrada SET valortotalnota =(new.precocompra * (new.quantidade+new.ipi+new.frete+new.icms)),
+			datacompra=now()
+			where identrada = new.identrada;
+		end if;
+												
+		if((new.quantidade<0) and (new.icms<0) and (new.ipi<0) and (new.frete<0) and (new.precocompra<0)) then
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.quantidade;
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.icms;
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.ipi;
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.frete;
+		end if;
+		
+		if((new.quantidade IS NULL) and (new.icms IS NULL) and (new.ipi IS NULL) and (new.frete IS NULL)
+		   and (new.precocompra IS NULL)) then
+		 RAISE EXCEPTION '% não pode ter valor nulo',new.quantidade;
+		 RAISE EXCEPTION '% não pode ter valor nulo',new.icms;
+		 RAISE EXCEPTION '% não pode ter valor nulo',new.ipi;
+		 RAISE EXCEPTION '% não pode ter valor nulo',new.frete;
+		 end if;
+
+		RETURN NEW;
+	-- Aqui temos um bloco IF que confirmará o tipo de operação UPDATE.
+	ELSIF (TG_OP = 'UPDATE') THEN
+		if((new.quantidade>0) and (new.icms>0) and (new.ipi>0) and (new.frete>0) and (new.precocompra>0)) then
+			UPDATE entrada SET valortotalnota =new.precocompra * (new.quantidade+new.ipi+new.frete+new.icms),
+			datacompra=now()
+			where identrada = new.identrada;
+		end if;
+												
+		if((new.quantidade<0) and (new.icms<0) and (new.ipi<0) and (new.frete<0) and (new.precocompra<0)) then
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.quantidade;
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.icms;
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.ipi;
+		 RAISE EXCEPTION '% não pode ter valores negativo',new.frete;
+		end if;
+		
+		if((new.quantidade IS NULL) and (new.icms IS NULL) and (new.ipi IS NULL) and (new.frete IS NULL)
+		   and (new.precocompra IS NULL)) then
+		 	RAISE EXCEPTION '% não pode ter valor nulo',new.quantidade;
+		 	RAISE EXCEPTION '% não pode ter valor nulo',new.icms;
+		 	RAISE EXCEPTION '% não pode ter valor nulo',new.ipi;
+		    RAISE EXCEPTION '% não pode ter valor nulo',new.frete;
+		end if;
+		RETURN old;
+	-- Aqui temos um bloco IF que confirmará o tipo de operação DELETE
+	ELSIF (TG_OP = 'DELETE') THEN
+		UPDATE entrada SET valortotalnota =valortotalnota-(new.precocompra * (new.quantidade+new.ipi+new.frete+new.icms))-
+											(new.precocompra * (new.quantidade+new.ipi+new.frete+new.icms))
+		where identrada = new.identrada;
+		RETURN OLD;
+	END IF;
+RETURN NULL;  
+END;
+$insert_update_delete_itensentrada_entrada$ language plpgsql;
+
+CREATE TRIGGER insert_update_delete_itensentrada_entrada
+AFTER INSERT ON itensentrada
+FOR EACH ROW 
+EXECUTE PROCEDURE insert_update_delete_itensentrada_entrada();
+--------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE FUNCTION insert_update_delete_itens_vendas_produto()
+RETURNS trigger AS $insert_update_delete_itens_vendas_venda$
+DECLARE
+BEGIN
+	IF (TG_OP = 'INSERT') THEN
+		UPDATE produto SET quantidade =quantidade - new.quantidade_itens,
+					--valortotal de venda--   --menor-- --o valor da porcentagem--
+			lucro=((new.valor * new.quantidade_itens)-((new.valor * new.quantidade_itens)*(new.desconto/100)))-
+					--desconto acerto--
+		(((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)) - 
+		trunc((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)))-
+									--valor de compra - quantidade de itens da itens_venda--
+									(valordecompra * new.quantidade_itens)
+			where idproduto = new.idproduto;
+	-- Aqui temos um bloco IF que confirmará o tipo de operação UPDATE.
+	ELSIF (TG_OP = 'UPDATE') THEN
+			UPDATE produto SET quantidade =quantidade - new.quantidade_itens,
+					--valortotal de venda--   --menor-- --o valor da porcentagem--
+			lucro=lucro-(((new.valor * new.quantidade_itens)-((new.valor * new.quantidade_itens)*(new.desconto/100)))-
+					--desconto acerto--
+		(((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)) - 
+		trunc((new.valor * new.quantidade_itens)-(new.valor * new.quantidade_itens)*(new.desconto/100)))-
+									--valor de compra - quantidade de itens da itens_venda--
+									(valordecompra * new.quantidade_itens))
+			where idproduto = new.idproduto;
+		RETURN old;
+	-- Aqui temos um bloco IF que confirmará o tipo de operação DELETE
+	ELSIF (TG_OP = 'DELETE') THEN
+			UPDATE produto set quantidade=quantidade + quantidade,
+				lucro=lucro-lucro
+			 where idproduto=new.idproduto;
+		RETURN old;
+	END IF;
+RETURN NULL;
+END;
+$insert_update_delete_itens_vendas_venda$ language plpgsql;
+
+CREATE TRIGGER insert_update_delete_itens_vendas_produto
+AFTER INSERT ON itens_vendas
+FOR EACH ROW 
+EXECUTE PROCEDURE insert_update_delete_itens_vendas_produto();
+
+---------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE FUNCTION insert_update_delete_itens_vendas_venda()
+RETURNS trigger AS $insert_update_delete_itens_vendas_venda$
+DECLARE
+BEGIN 
+	IF (TG_OP = 'INSERT') THEN
+		
+			UPDATE venda SET valortotal=valortotal+((new.valor * new.quantidade_itens)-
+									(new.valor * new.quantidade_itens)*(new.desconto/100)),
+			descontototal=descontototal+(new.valor * new.quantidade_itens)*(new.desconto/100),
+			datavenda=now(),
+			descontoacerto =descontoacerto+((new.valor * new.quantidade_itens)-
+									(new.valor * new.quantidade_itens)*(new.desconto/100)) - 
+									trunc((new.valor * new.quantidade_itens)-
+									(new.valor * new.quantidade_itens)*(new.desconto/100))
+			where idvenda = new.idvenda;
+			RETURN NEW;
+		
+	-- Aqui temos um bloco IF que confirmará o tipo de operação UPDATE.
+	ELSIF (TG_OP = 'UPDATE') THEN
+			UPDATE venda SET valortotal=valortotal+((new.valor * new.quantidade_itens)+
+									(new.valor * new.quantidade_itens)*(new.desconto/100)),
+			descontototal=descontototal+(new.valor * new.quantidade_itens)*(new.desconto/100),
+			datavenda=now(),    
+			descontoacerto =descontoacerto+((new.valor * new.quantidade_itens)+
+									(new.valor * new.quantidade_itens)*(new.desconto/100))/100
+			where idvenda = new.idvenda;
+	RETURN new;
+		
+	-- Aqui temos um bloco IF que confirmará o tipo de operação DELETE
+	ELSIF (TG_OP = 'DELETE') THEN
+		UPDATE venda SET valortotal=valortotal-((new.valor * new.quantidade_itens)+
+									(new.valor * new.quantidade_itens)*(new.desconto/100)),
+			descontototal=descontototal+(new.valor * new.quantidade_itens)*(new.desconto/100),
+			datavenda=now(),    
+			descontoacerto =descontoacerto+((new.valor * new.quantidade_itens)+
+									(new.valor * new.quantidade_itens)*(new.desconto/100))/100
+			where idvenda = new.idvenda;
+		RETURN new;
+	END IF;
+RETURN NULL;
+END;
+$insert_update_delete_itens_vendas_venda$ language plpgsql;
+
+CREATE TRIGGER insert_update_delete_itens_vendas_venda
+AFTER INSERT ON itens_vendas
+FOR EACH ROW 
+EXECUTE PROCEDURE insert_update_delete_itens_vendas_venda();
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+trigger que gera a parcela do cliente 
+create or replace function gerarparcelas()
+RETURNS TRIGGER AS $$
+	DECLARE parcela int4 :=1;
+	DECLARE data_parcela int4 :=30;
+	BEGIN 
+		WHILE parcela <= NEW.numerodeparcelas  loop
+			UPDATE parcelas SET valorparcela=(new.valortotalparcela/new.numerodeparcelas),
+			status='NP',vencimento=current_date+30
+			where idparcelas = new.idparcelas;
+			data_parcela := data_parcela + 30;
+			parcela := parcela + 1;
+		END LOOP;
+RETURN NULL;
+END $$
+LANGUAGE PLPGSQL;
+
+CREATE TRIGGER gerarparcelas
+AFTER INSERT ON parcelas
+FOR EACH ROW 
+EXECUTE PROCEDURE gerarparcelas();
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--como estou inserindo em venda sem o valores descontototal, descontoacerto, valortotal esse valores vão vir nulo ai 
+criei um trigger para igual a zero esse valores para a proximo trigger fazer o calculo de itens_vendas para venda porque sem não iria fazer os calculos 
+create or replace function set_zero_venda()
+RETURNS TRIGGER AS $$
+	BEGIN 
+			update venda set descontototal=0, descontoacerto=0, valortotal=0 
+			where idvenda=new.idvenda;
+RETURN NULL;
+END $$
+LANGUAGE PLPGSQL;
+
+CREATE TRIGGER set_zero_venda
+AFTER INSERT ON venda
+FOR EACH ROW 
+EXECUTE PROCEDURE set_zero_venda();
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- para quando o usuario realizar o pagamento fiz essa trigger--
+create or replace function Pagar_Parcelas()
+RETURNS TRIGGER AS $$
+	BEGIN 
+			update parcelas set valortotalparcela = 
+			valortotalparcela-(new.valor_pagamento/new.numerosdeparcelas),
+			numerodeparcelas=numerodeparcelas-new.numerosdeparcelas
+			where idpagamento = new.pagamento;
+			if(valortotalparcela==0) then
+			update parcelas set status='PG' where idpagamento = new.idpagamento;
+			end if;
+			
+RETURN NULL;
+END $$
+LANGUAGE PLPGSQL;
+
+CREATE TRIGGER Pagar_Parcelas
+AFTER INSERT ON pagamento
+FOR EACH ROW 
+EXECUTE PROCEDURE Pagar_Parcelas();
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---aqui quando haver delete em itens_vendas a trigger colocar na tabela devolução
+
+create or replace function delete_itens_vendas_insert_devolucao()
+RETURNS TRIGGER AS $$
+	BEGIN 
+		insert into devolucao(quantidade_devolvida,datadevolucao,iditensvendas)
+			values (new.quantidade_itens,current_date,new.iditensvendas);		
+		RETURN NULL;
+	END $$
+LANGUAGE PLPGSQL;
+
+CREATE TRIGGER delete_itens_vendas_insert_devolucao
+AFTER delete ON itens_vendas
+FOR EACH ROW 
+EXECUTE PROCEDURE delete_itens_vendas_insert_devolucao();
